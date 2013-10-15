@@ -1,0 +1,45 @@
+File format:
+add '~' character - money that will be subtracted at a future date 
+    - also add a field for the date the transaction will be taken
+        - could interpret the date field as a future date
+add a character to then end of the line signifying whether I owe this money to someone else, or they owe it for me (e.g I use Mommy's card to pay, or I pay for someone and they owe me)
+
+Extra files:
+add a separate file for savings goals and progress towards it
+add another file for donations - this could be combined with the previous point into one file
+
+Analytics:
+average/median spent/gained per month/day/week/year
+    -a -g -t month - average gained per month
+top gained, top spent
+    could generalize this by sort
+        -s spent
+        -s gained
+        -s vendor spent ??
+        -s vendor gained ??
+    then use head or tail
+top place where i spend money
+average spend on a certain category
+average spend on a certain category per month/day/week/year
+
+Visualize:
+allow to graph with d3 calendar graphs like the github contribution graph for amount spent per day or month on everything or different things
+
+Listing:
+allow to list entries by category, method, amount e.g. 
+    balance.py -l -- list all entries, 
+    balance.py -l -s -- list all entries spent, 
+    balance.py -l -g --list all entries gained, 
+    balance.py -l -m -- list all methods of payment
+    balance.py -l -m credit -- list all entries paid with credit
+    balance.py -l -c transport -- list all entries of category transport
+    balance.py -l -a 20.00 -- list all entries of amount 20.00
+    balance.py -l -s -a 20.00 -- list all entries of amount 20.00 spent
+
+Validation:
+DONE - ignore blank or improperly formatted lines, 
+DONE - record how many invalid lines are found 
+- possibly list them like -l error or something like that (-l -e)
+
+Refactor:
+DONE - combine implementation of spent, gained, total.
