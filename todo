@@ -3,6 +3,7 @@ add '~' character - money that will be subtracted at a future date
     - also add a field for the date the transaction will be taken
         - could interpret the date field as a future date
 add a character to then end of the line signifying whether I owe this money to someone else, or they owe it for me (e.g I use Mommy's card to pay, or I pay for someone and they owe me)
+Allow use of optional columns i.e. columns that are not required to be present in every entry
 
 Extra files:
 add a separate file for savings goals and progress towards it
