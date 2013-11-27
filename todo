@@ -44,3 +44,7 @@ DONE - record how many invalid lines are found
 Refactor:
 DONE - combine implementation of spent, gained, total.
 - Encapsulate a line in the balance file as an object
+
+Usage:
+Allow program to accept entries from stdin
+    this combined with listing will allow a really nice way to do analytics on a subset of the entries
