@@ -8,7 +8,6 @@ try:
 except ImportError:
     import Json
 
-file_name = './balance'
 columns = ('amount', 'category', 'description', 'vendor', 'method', 'date')
 column_positions = {
         'amount': 0,
@@ -18,8 +17,15 @@ column_positions = {
         'method': 4,
         'date': 5
 }
-operators = ('-', '+')
 date_formats = ('%m%d%y')
+file_name = './balance'
+operators = ('-', '+')
+time_periods = {
+        'day': 1,
+        'week': 7,
+        'month': 30,
+        'year': 365
+}
 
 def json(fp):
     result = []
@@ -33,6 +39,9 @@ def select():
 
 def list(fp):
     pass
+
+def parse(line):
+    return line.strip().split(':')
 
 def valid(line, strict=False):
     """
@@ -104,7 +113,29 @@ def total(fp, sym=None):
             total += float(line.strip().split(':')[0][1:])
     return total
 
-def average(fp, period):
+def average(fp, action='-', period='day'):
+    """
+    Returns an average for the given time period. 
+    """
+    #TODO: this is wrong. it's considering each entry one day. This is actually
+    # calculating the average transaction made
+    total = 0.0
+    count = 0.0
+    if not action in operators:
+        return None
+
+    for line in clean(fp):
+        pline = parse(line)
+        if pline[0][0] == action:
+            total += float(pline[0][1:])
+            count += 1
+
+    return total/count if count > 0 else 0
+
+def median(fp, action='-', period='day'):
+    """
+    Returns the median for spent/gained for a given time period
+    """
     pass
 
 if __name__ == '__main__':
@@ -122,6 +153,10 @@ if __name__ == '__main__':
                         '--gained', 
                         help='calculate total money gained', 
                         action='store_true')
+    parser.add_argument('-a',
+                        '--average',
+                        help='calculate the average spent',
+                        action='store_true')
 
     args = parser.parse_args()
 
@@ -132,5 +167,7 @@ if __name__ == '__main__':
             print(total(fp, '-'))
         elif args.gained:
             print(total(fp, '+'))
+        elif args.average:
+            print(average(fp))
         else:
             print(total(fp))
