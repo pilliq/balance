@@ -49,3 +49,6 @@ DONE - combine implementation of spent, gained, total.
 Usage:
 Allow program to accept entries from stdin
     this combined with listing will allow a really nice way to do analytics on a subset of the entries
+
+Testing:
+Add integration tests
