@@ -19,7 +19,7 @@ column_positions = {
         'date': 5
 }
 operators = ('-', '+')
-date_formats = ('%m%d%y')
+supported_date_formats = ('%m%d%y',)
 
 def json(fp):
     result = []
@@ -34,36 +34,45 @@ def select():
 def list(fp):
     pass
 
+def _is_valid_date(date):
+    for date_format in supported_date_formats:
+        try:
+            datetime.strptime(date, date_format)
+        except ValueError:
+            continue
+        else: # date conforms to one of the supported formats
+            return True
+        return False # should only get here if all supported formats fail
+
 def valid(line, strict=False):
     """
-    Return True if line is valid. If strict is True, if line has the correct
-    number of supported columns.
+    Return True if line is valid. If strict is True, checks if line has no more
+    columns than the number of supported columns.
     """
     parts = line.split(':')
 
+    # if strict, make sure there are no extra columns
     if strict:
-        if len(parts) != len(columns): # correct number of columns
+        if len(parts) != len(columns):
+            return False
+    # else, check if line has at least as many columns as is supported
+    else:
+        if len(parts) < len(columns):
             return False
 
-    if line[0] not in operators: # supported operator
+    # check that operator is supported
+    if line[0] not in operators:
         return False
 
-    try: # amount is a number
+    # check that amount is a number
+    try:
         float(parts[column_positions['amount']][1:])
     except ValueError:
         return False
     
-    if not len(parts[column_positions['date']].strip()) == 6:
+    # check if date format is valid
+    if not _is_valid_date(parts[column_positions['date']]):
         return False
-
-    for date_format in date_formats:
-        try:
-            datetime.strptime(parts[column_positions['date']], date_format)
-        except ValueError:
-            continue
-        else: # date conforms to one of the supported formats
-            break
-        return False # should only get here if all supported formats fail
 
     return True
 
