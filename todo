@@ -36,11 +36,16 @@ allow to list entries by category, method, amount e.g.
     balance.py -l -c transport -- list all entries of category transport
     balance.py -l -a 20.00 -- list all entries of amount 20.00
     balance.py -l -s -a 20.00 -- list all entries of amount 20.00 spent
+    list date by single date
+    list date by range
+    list multiple dates
+    list errors/invalid entries
 
 Validation:
 DONE - ignore blank or improperly formatted lines, 
 DONE - record how many invalid lines are found 
 - possibly list them like -l error or something like that (-l -e)
+- read escaped ':' properly. This is important, some entries are escaped, but are not read correctly by the parser
 
 Refactor:
 DONE - combine implementation of spent, gained, total.
