@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
 import argparse
+import sys
+import select
+import time
 from datetime import datetime
 
 try:
     import simplejson as Json
 except ImportError:
-    import Json
+    import json as Json
 
 file_name = './balance'
 columns = ('amount', 'category', 'description', 'vendor', 'method', 'date')
@@ -21,6 +24,10 @@ column_positions = {
 operators = ('-', '+')
 supported_date_formats = ('%m%d%y',)
 
+class BalanceError(Exception): pass
+class BalanceQueryError(BalanceError): pass
+class BalanceCommandError(BalanceError): pass
+
 def json(fp):
     result = []
     for line in fp:
@@ -28,21 +35,76 @@ def json(fp):
         result.append(dict(zip(columns, parts)))
     return Json.dumps(result)
 
-def select():
-    pass
+def _get_default(l, pos, default=None):
+    """
+    Given and list and position, returns the element of the list at that
+    position, else returns the the default value on error.
+    """
+    try:
+        return l[pos]
+    except IndexError:
+        return default
 
-def list(fp):
-    pass
+def list_entries(fp, args):
+    entries = []
+    if len(args) == 0: # list all entries
+        for entry in clean(fp):
+            entries.append(entry)
+    elif args[0] not in columns:
+        raise BalanceCommandError('Column "%s" does not exist' % args[0])
+    elif args[0] == 'date':
+        entries = list_date(fp, *args)
+    else: # default is to list all entries whose column matches a value
+        #entries = list_by_column(fp
+        pass
+    return entries
 
-def _is_valid_date(date):
+def list_by_column(fp, column, value):
+    if column not in columns:
+        raise BalanceQueryError('Column does not exist')
+    entries = []
+    for line in clean(fp):
+        parts = line.strip().split(':')
+        if parts[column_positions[column]] == value:
+            entries.append(line)
+    return entries
+
+def list_date(fp, *args):
+    """
+    Expects `start` and optionally `end` in args
+    """
+    if len(args) == 0:
+        raise BalanceCommandError('Need at least one date for listing dates')
+    entries = []
+    print("ARGS")
+    print(args)
+    start_date = _parse_date(_get_default(args, 0, ''))
+    end_date = _parse_date(_get_default(args, 1, ''))
+    if start_date is None:
+        raise BalanceCommandError('Invalid start date')
+    if end_date is None:
+        raise BalanceCommandError('Invalid end date')
+    for line in clean(fp):
+        parts = line.split(':')
+        date = _parse_date(parts[column_positions['date']])
+        if date >= start_date and date <= end_date:
+            entries.append(line) 
+    return entries
+
+def _parse_date(date):
     for date_format in supported_date_formats:
         try:
-            datetime.strptime(date, date_format)
+            parsed_date = datetime.strptime(date, date_format)
         except ValueError:
             continue
-        else: # date conforms to one of the supported formats
-            return True
-        return False # should only get here if all supported formats fail
+        else: # date conforms to one of the supported formats 
+            return parsed_date
+        return None # should only get here if all supported formats fail
+
+def _is_valid_date(date):
+    if _parse_date(date) is None:
+        return False
+    return True
 
 def valid(line, strict=False):
     """
@@ -116,6 +178,26 @@ def total(fp, sym=None):
 def average(fp, period):
     pass
 
+def log(data):
+    sys.stderr.write(str(data)+'\n')
+
+def main(entries, args):
+    if args.list is not None:
+        if args.list[0] not in columns:
+            raise BalanceCommandError('Column "%s" does not exist' % args.list[0])
+        print('\n'.join(list_by_column(entries, args.list[0], args.list[1])))
+
+    elif args.output == 'json':
+        print(json(entries))
+    elif args.spent:
+        print(total(entries, '-'))
+    elif args.gained:
+        print(total(entries, '+'))
+    else:
+        print(total(entries))
+
+    exit(0)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
@@ -131,15 +213,23 @@ if __name__ == '__main__':
                         '--gained', 
                         help='calculate total money gained', 
                         action='store_true')
+    parser.add_argument('-l',
+                        '--list',
+                        nargs='+',
+                        help='list all entries in [column] that match [value]')
 
     args = parser.parse_args()
 
-    with open('./balance', 'r') as fp:
-        if args.output == 'json':
-            print(json(fp))
-        elif args.spent:
-            print(total(fp, '-'))
-        elif args.gained:
-            print(total(fp, '+'))
+    try:
+        time.sleep(1)
+        if select.select([sys.stdin,],[],[],0.0)[0]:
+            log('stdin')
+            main(sys.stdin, args)
         else:
-            print(total(fp))
+            log('file')
+            with open('./balance', 'r') as fp:
+                main(fp, args)
+            log('done')
+    except BalanceError as e:
+        print(e)
+        exit(1)
