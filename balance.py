@@ -12,7 +12,10 @@ try:
 except ImportError:
     import json as Json
 
-file_name = './balance/balance.book'
+COMMENT_STR = '#'
+BALANCE_FILE = './balance.book'
+
+repay_methods = ('credit', 'mcash', 'mcheck')
 columns = ('amount', 'category', 'description', 'vendor', 'method', 'date')
 column_positions = {
         'amount': 0,
@@ -49,7 +52,7 @@ def _get_default(l, pos, default=None):
 def list_entries(fp, args):
     entries = []
     if len(args) == 0: # list all entries
-        for entry in clean(fp):
+        for entry in clean_gen(fp):
             entries.append(entry)
     elif args[0] not in columns:
         raise BalanceCommandError('Column "%s" does not exist' % args[0])
@@ -64,7 +67,7 @@ def list_by_column(fp, column, value):
     if column not in columns:
         raise BalanceQueryError('Column does not exist')
     entries = []
-    for line in clean(fp):
+    for line in clean_gen(fp):
         parts = line.strip().split(':')
         if parts[column_positions[column]] == value:
             entries.append(line)
@@ -85,7 +88,7 @@ def list_date(fp, *args):
         raise BalanceCommandError('Invalid start date')
     if end_date is None:
         raise BalanceCommandError('Invalid end date')
-    for line in clean(fp):
+    for line in clean_gen(fp):
         parts = line.split(':')
         date = _parse_date(parts[column_positions['date']])
         if date >= start_date and date <= end_date:
@@ -140,7 +143,7 @@ def valid(line, strict=False):
     return True
 
 # TODO: ability to yield a set of invalid lines
-def clean(fp, yield_invalid_count=False):
+def clean_gen(fp, yield_invalid_count=False):
     """
     Generator to ignore empty, commented out, and invalid lines. If 
     yield_invalid_count is True, the last yield will be the number of lines that
@@ -151,7 +154,7 @@ def clean(fp, yield_invalid_count=False):
         line = line.strip()
         if line == '':
             continue
-        if line[0] == '#':
+        if line[0] == COMMENT_STR:
             continue
         if not valid(line):
             count += 1
@@ -160,6 +163,23 @@ def clean(fp, yield_invalid_count=False):
     if yield_invalid_count:
         yield count
 
+def repay_gen(fp):
+    """
+    Generator that returns all repay entries (entries with category set to
+    'repay' and are commented out), and all entries that need to be repaid
+    (entries with whose payment method are found in repay_methods).
+    """
+    for line in fp:
+        line = line.strip()
+        if line[0] == COMMENT_STR:
+            if valid(line[1:]):
+                parts = line[1:].split(':')
+                if parts[column_positions['category']] == 'repay':
+                    yield line[1:]
+        elif valid(line):
+            parts = line.split(':')
+            if parts[column_positions['method']] in repay_methods:
+                yield line
 
 def total(fp, sym=None):
     """
@@ -169,12 +189,22 @@ def total(fp, sym=None):
     summed. This is equivalent to the total balance. Returns a float of the sum
     """
     total = 0
-    for line in clean(fp):
+    for line in clean_gen(fp):
         if sym is None:
             total += float(line.strip().split(':')[0])
         if line[0] == sym:
+            #print(line)
             total += float(line.strip().split(':')[0][1:])
     return total
+
+def repay(fp):
+    repay = []
+    repayed = []
+    for line in repay_gen(fp):
+        if line[column_positions['category']] == 'repay':
+            repayed.append(line)
+        else:
+            repay.append(line)
 
 def average(fp, period):
     pass
@@ -187,11 +217,15 @@ def main(entries, args):
         if args.list[0] not in columns:
             raise BalanceCommandError('Column "%s" does not exist' % args.list[0])
         print('\n'.join(list_by_column(entries, args.list[0], args.list[1])))
-
+    elif args.debug:
+        for i in repay_gen(entries):
+            print(i)
     elif args.output == 'json':
         print(json(entries))
     elif args.spent:
+        #total(entries, '-')
         print(total(entries, '-'))
+        pass
     elif args.gained:
         print(total(entries, '+'))
     else:
@@ -218,17 +252,19 @@ if __name__ == '__main__':
                         '--list',
                         nargs='+',
                         help='list all entries in [column] that match [value]')
+    parser.add_argument('-d',
+                        '--debug',
+                        help='debug',
+                        action='store_true')
 
     args = parser.parse_args()
 
     try:
         time.sleep(1)
         if select.select([sys.stdin,],[],[],0.0)[0]:
-            log('stdin')
             main(sys.stdin, args)
         else:
-            log('file')
-            with open('./balance/balance.book', 'r') as fp:
+            with open(BALANCE_FILE, 'r') as fp:
                 main(fp, args)
             log('done')
     except BalanceError as e:
