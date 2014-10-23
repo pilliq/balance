@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# AMDG
 
 import argparse
 import sys
@@ -11,7 +12,7 @@ try:
 except ImportError:
     import json as Json
 
-file_name = './balance'
+file_name = './balance/balance.book'
 columns = ('amount', 'category', 'description', 'vendor', 'method', 'date')
 column_positions = {
         'amount': 0,
@@ -227,7 +228,7 @@ if __name__ == '__main__':
             main(sys.stdin, args)
         else:
             log('file')
-            with open('./balance', 'r') as fp:
+            with open('./balance/balance.book', 'r') as fp:
                 main(fp, args)
             log('done')
     except BalanceError as e:
