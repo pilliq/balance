@@ -1,0 +1,7 @@
+-12.00:food:sandwich for lunch:Jimmy John's:credit:092414
+-9.00:fuel:fill up gas:Shell:mcash:092414
+#-21.00:repay:#1 #2:Broseph:withdrawal:092514
+-12.00:food:sandwich for lunch:Jimmy John's:credit:092614
+-9.00:fuel:fill up gas:Shell:mcash:092714
+#-21.00:repay:#4 #5 words should not be parsed as eids:Broseph:withdrawal:092814
+-7.00:groceries:misc groceries:Pathmark:mcheck:092914
