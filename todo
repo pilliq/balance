@@ -57,3 +57,12 @@ Allow program to accept entries from stdin
 
 Testing:
 Add integration tests
+
+-f --filter
+    be able to add a filter to any action
+        e.x. only calculate --spent of category=food
+             be able to calculate --spent of allamounts < 100.00
+             be able to calculate total of all items within a date range
+        have to think about how we will handle date ranges
+            e.g. average spent on food per month
+            is it a special case? or can it be added to this filter way of looking at the world
