@@ -1,4 +1,6 @@
 balance.book
+build/
+dist/
 .*.swp
 *.pyc
-*.egg-info
+*.egg-info/
