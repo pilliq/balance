@@ -4,8 +4,10 @@
 import argparse
 import logging
 import locale
+import os
 import sys
 from collections import OrderedDict
+from subprocess import call
 from analyzers import BasicAnalyzer
 from balance_book import BalanceBook
 from loaders import BasicLoader, RepayLoader
@@ -14,6 +16,7 @@ from repay_book import RepayBook
 locale.setlocale(locale.LC_ALL, 'en_US')
 
 DEFAULT_BOOK = './balance.book'
+DEFAULT_EDITOR = 'vim'
 
 def init_logging():
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -135,7 +138,10 @@ def main():
         ])
         output(format_table(align_dots(metrics)))
     elif args.edit:
-        pass
+        EDITOR = os.environ.get('EDITOR', DEFAULT_EDITOR)
+        call([EDITOR, args.book])
+        analyzer = basic_analyzer(args.book)
+        output(format_amount(analyzer.balance()))
     else:
         analyzer = basic_analyzer(args.book)
         output(format_amount(analyzer.balance()))
