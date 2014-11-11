@@ -7,6 +7,17 @@ class BalanceBook(object):
         self.logger = logging.getLogger(type(self).__name__)
         self._entries = self._group_by_eid(entries)
 
+    def __iter__(self):
+        for e in self._entries:
+            yield e
+
+    def _iter_days(self, start=None, stop=None, step=1):
+        sorted_entries = sorted(self._entries, key=lambda entry: entry.date)
+        start = sorted_entries[0].date if start is None else start
+        stop = sorted_entries[-1].date if stop is None else stop
+        # return some kind of generator
+        pass
+
     def _group_by_eid(self, entries):
         eids = {}
         for e in entries:
@@ -25,6 +36,18 @@ class BalanceBook(object):
             return False
         self._entries[entry.eid] = entry
         return True
+
+    def iter_day(self, start=None, stop=None):
+        return self._iter_days(start=start, stop=stop, step=1)
+
+    def iter_week(self, start=None, stop=None):
+        return self._iter_days(start=start, stop=stop, step=7)
+
+    def iter_month(self, start=None, stop=None):
+        pass
+
+    def iter_year(self, start=None, stop=None):
+        pass
 
     @property
     def entries(self):
