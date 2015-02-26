@@ -1,15 +1,21 @@
 # AMDG
 
 import logging
+from entry import Columns
 
 class BalanceBook(object):
-    def __init__(self, entries):
+    def __init__(self, entries, index=Columns.EID):
         self.logger = logging.getLogger(type(self).__name__)
         self._entries = self._group_by_eid(entries)
+        self._index = index
 
     def __iter__(self):
         for e in self._entries:
             yield e
+
+    @property
+    def index(self):
+        return self._index
 
     def _iter_days(self, start=None, stop=None, step=1):
         sorted_entries = sorted(self._entries, key=lambda entry: entry.date)
@@ -17,6 +23,14 @@ class BalanceBook(object):
         stop = sorted_entries[-1].date if stop is None else stop
         # return some kind of generator
         pass
+
+    def _index_by(self, entries, column):
+        result = {}
+        for e in entries:
+            if getattr(e, column) not in result:
+                result[getattr(e, column)] = []
+            result[getattr(e, column)].append(e)
+        return result
 
     def _group_by_eid(self, entries):
         eids = {}

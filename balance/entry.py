@@ -21,6 +21,7 @@ class ColumnPositions(object):
     DATE = 5
 
 class Columns(object):
+    EID = 'eid'
     AMOUNT = 'amount'
     CATEGORY = 'category'
     DESCRIPTION = 'description'
@@ -30,7 +31,8 @@ class Columns(object):
 
     @staticmethod
     def exists(category):
-        if category in (Columns.AMOUNT,
+        if category in (Columns.EID,
+                        Columns.AMOUNT,
                         Columns.CATEGORY,
                         Columns.DESCRIPTION,
                         Columns.VENDOR,
