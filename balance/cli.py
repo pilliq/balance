@@ -56,15 +56,26 @@ def align_dots(table):
 def output(s):
     print(s)
 
-def basic_analyzer(book_path):
-    loader = BasicLoader(book_path) 
+def basic_analyzer(filename=None, content=None):
+    loader = BasicLoader(filename=filename, content=content)
     bbook = BalanceBook(loader.load())
     return BasicAnalyzer(bbook)
 
-def repay_analyzer(book_path):
-    loader = RepayLoader(book_path)
+def repay_analyzer(filename=None, content=None):
+    loader = RepayLoader(filename=filename, content=content)
+
     rbook = RepayBook(loader.load())
     return BasicAnalyzer(rbook)
+
+def get_piped():
+    """
+    Returns data if input piped through stdin, else None
+    """
+    with sys.stdin as stdin:
+        if not stdin.isatty():
+            return stdin.read()
+        else:
+            return None
 
 def main():
     init_logging()
@@ -78,7 +89,7 @@ def main():
                         '--book',
                         help='path to balance.book',
                         action='store',
-                        default=DEFAULT_BOOK)
+                        default=None)
     parser.add_argument('-e',
                         '--edit',
                         help='edit balance.book file with $EDITOR',
@@ -99,33 +110,48 @@ def main():
                         '--list',
                         help='list all entries',
                         action='store_true')
+    #parser.add_argument('-f',
+    #                    '--filter',
+    #                    help="specify category equality filter, e.g. -f 'method == credit', -f '",
+    #                    action='store',
+    #                    default=None,
+    #                    nargs='2')
 
     args = parser.parse_args()
+
+    content = get_piped()
+    book_path = None
+    if args.book is None and content is None:
+        book_path = DEFAULT_BOOK
+    elif content is not None:
+        book_path = None
+    else:
+        book_path = args.book
     
     if args.repay:
-        analyzer = repay_analyzer(args.book)
+        analyzer = repay_analyzer(filename=book_path, content=content)
         metrics = OrderedDict([
             ('Repay', format_amount(analyzer.gained())),
             ('Repaid', format_amount(analyzer.spent()))
         ])
         output(format_table(align_dots(metrics)))
     elif args.spent:
-        analyzer = basic_analyzer(args.book)
+        analyzer = basic_analyzer(filename=book_path, content=content)
         output(format_amount(analyzer.spent()))
     elif args.gained:
-        analyzer = basic_analyzer(args.book)
+        analyzer = basic_analyzer(filename=book_path, content=content)
         output(format_amount(analyzer.gained()))
     elif args.list:
-        loader = BasicLoader(args.book) 
+        loader = BasicLoader(filename=book_path, content=content)
         bbook = BalanceBook(loader.load())
         for entry in bbook.entries:
             output(entry)
     elif args.all:
-        bloader = BasicLoader(args.book) 
+        bloader = BasicLoader(filename=book_path, content=content)
         bbook = BalanceBook(bloader.load())
         ba = BasicAnalyzer(bbook)
 
-        rloader = RepayLoader(args.book)
+        rloader = RepayLoader(filename=book_path, content=content)
         rbook = RepayBook(rloader.load())
         ra = BasicAnalyzer(rbook)
 
@@ -139,11 +165,11 @@ def main():
         output(format_table(align_dots(metrics)))
     elif args.edit:
         EDITOR = os.environ.get('EDITOR', DEFAULT_EDITOR)
-        call([EDITOR, args.book])
-        analyzer = basic_analyzer(args.book)
+        call([EDITOR, book_path])
+        analyzer = basic_analyzer(filename=book_path, content=content)
         output(format_amount(analyzer.balance()))
     else:
-        analyzer = basic_analyzer(args.book)
+        analyzer = basic_analyzer(filename=book_path, content=content)
         output(format_amount(analyzer.balance()))
 
 if __name__ == '__main__':

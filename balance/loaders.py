@@ -4,17 +4,26 @@ from entry import Entry
 
 COMMENT_STR='#'
 
+def _iter_lines(filename, content):
+    if content is not None:
+        for line in content.split('\n'):
+            yield line
+    if filename is not None:
+        with open(filename, 'r') as f:
+            for line in f:
+                yield line
+
 class BasicLoader(object):
-    def __init__(self, filename):
+    def __init__(self, filename=None, content=None):
         self.filename = filename
-        pass
+        self.content = content
 
     def load(self, return_errors=False):
         entries = []
         errors = []
-        with open(self.filename, 'r') as f:
-            for i, line in enumerate(f):
-                if line[0] == COMMENT_STR or line == '':
+        for i, line in enumerate(_iter_lines(self.filename, self.content)):
+            if len(line) > 0:
+                if line[0] == COMMENT_STR:
                     continue
                 try:
                     entries.append(Entry(i+1, line.strip()))
@@ -29,14 +38,15 @@ class RepayLoader(object):
 
     methods = ('credit', 'mcash', 'mcheck')
 
-    def __init__(self, filename):
+    def __init__(self, filename=None, content=None):
         self.filename = filename
+        self.content = content
 
     def load(self, return_errors=False):
         entries = []
         errors = []
-        with open(self.filename, 'r') as fp:
-            for i, line in enumerate(fp):
+        for i, line in enumerate(_iter_lines(self.filename, self.content)):
+            if len(line) > 0:
                 if line[0] == COMMENT_STR:
                     try:
                         entry = Entry(i+1, line[1:].strip())
