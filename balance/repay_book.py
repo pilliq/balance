@@ -48,7 +48,7 @@ class RepayBook(object):
             for eid_str in e.description.split(' '):
                 eid = self._parse_eid(eid_str)
                 if eid is not None:
-                    results = self._repay.filter(eid=eid)
+                    results = self._repay.eq(eid=eid)
                     if len(results) == 0:
                         self.logger.warning(
                             "Could not find repay entry for eid=%d", eid

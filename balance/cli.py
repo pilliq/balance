@@ -63,7 +63,6 @@ def basic_analyzer(filename=None, content=None):
 
 def repay_analyzer(filename=None, content=None):
     loader = RepayLoader(filename=filename, content=content)
-
     rbook = RepayBook(loader.load())
     return BasicAnalyzer(rbook)
 
@@ -110,12 +109,16 @@ def main():
                         '--list',
                         help='list all entries',
                         action='store_true')
-    #parser.add_argument('-f',
-    #                    '--filter',
-    #                    help="specify category equality filter, e.g. -f 'method == credit', -f '",
-    #                    action='store',
-    #                    default=None,
-    #                    nargs='2')
+    parser.add_argument('--eq',
+                        help="specify column equality filter, e.g. '--eq method credit' is equivalent to 'method == credit'",
+                        action='store',
+                        default=None,
+                        nargs=2)
+    parser.add_argument('--ne',
+                        help="specify column not equality filter, e.g. '--ne method credit' is equivalent to 'method != credit'",
+                        action='store',
+                        default=None,
+                        nargs=2)
 
     args = parser.parse_args()
 
@@ -128,6 +131,16 @@ def main():
     else:
         book_path = args.book
     
+    loader = BasicLoader(filename=book_path, content=content)
+    balance_book = BalanceBook(loader.load())
+
+    if args.eq:
+        kwargs = dict([set(args.eq)])
+        balance_book = BalanceBook(balance_book.eq(**kwargs))
+    if args.ne:
+        kwargs = dict([set(args.ne)])
+        balance_book = BalanceBook(balance_book.ne(**kwargs))
+
     if args.repay:
         analyzer = repay_analyzer(filename=book_path, content=content)
         metrics = OrderedDict([
@@ -136,20 +149,16 @@ def main():
         ])
         output(format_table(align_dots(metrics)))
     elif args.spent:
-        analyzer = basic_analyzer(filename=book_path, content=content)
+        analyzer = BasicAnalyzer(balance_book)
         output(format_amount(analyzer.spent()))
     elif args.gained:
-        analyzer = basic_analyzer(filename=book_path, content=content)
+        analyzer = BasicAnalyzer(balance_book)
         output(format_amount(analyzer.gained()))
     elif args.list:
-        loader = BasicLoader(filename=book_path, content=content)
-        bbook = BalanceBook(loader.load())
-        for entry in bbook.entries:
+        for entry in balance_book.entries:
             output(entry)
     elif args.all:
-        bloader = BasicLoader(filename=book_path, content=content)
-        bbook = BalanceBook(bloader.load())
-        ba = BasicAnalyzer(bbook)
+        ba = BasicAnalyzer(balance_book)
 
         rloader = RepayLoader(filename=book_path, content=content)
         rbook = RepayBook(rloader.load())
@@ -169,7 +178,7 @@ def main():
         analyzer = basic_analyzer(filename=book_path, content=content)
         output(format_amount(analyzer.balance()))
     else:
-        analyzer = basic_analyzer(filename=book_path, content=content)
+        analyzer = BasicAnalyzer(balance_book)
         output(format_amount(analyzer.balance()))
 
 if __name__ == '__main__':

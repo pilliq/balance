@@ -19,13 +19,13 @@ class BalanceBookTests(BaseTest, unittest.TestCase):
         self.assertEquals(6, len(bbook.entries))
         self.assertTrue(bbook.add(Entry(7, entry)))
         self.assertEquals(7, len(bbook.entries))
-        self.assertEquals(1, len(bbook.filter(eid=7)))
+        self.assertEquals(1, len(bbook.eq(eid=7)))
 
     def test_filter(self):
         loader = BasicLoader('tests/data/balance_book')
         bbook = BalanceBook(loader.load())
 
-        entries = bbook.filter(eid=1)
+        entries = bbook.eq(eid=1)
         self.assertEquals(1, len(entries))
         self.check_entry(entries[0],
                          -11.00,
@@ -35,7 +35,7 @@ class BalanceBookTests(BaseTest, unittest.TestCase):
                          'cash',
                          datetime(2014,10,1))
 
-        entries = bbook.filter(amount=-11.00)
+        entries = bbook.eq(amount=-11.00)
         self.assertEquals(2, len(entries))
         self.check_entry(entries[0],
                          -11.00,
@@ -52,7 +52,7 @@ class BalanceBookTests(BaseTest, unittest.TestCase):
                          'cash',
                          datetime(2014,10,1))
 
-        entries = bbook.filter(category='fuel')
+        entries = bbook.eq(category='fuel')
         self.assertEquals(1, len(entries))
         self.check_entry(entries[0],
                          -40.00,
@@ -62,7 +62,7 @@ class BalanceBookTests(BaseTest, unittest.TestCase):
                          'credit',
                          datetime(2014,10,1))
 
-        entries = bbook.filter(description='gym membership')
+        entries = bbook.eq(description='gym membership')
         self.assertEquals(1, len(entries))
         self.check_entry(entries[0],
                          -30.00,
@@ -72,7 +72,7 @@ class BalanceBookTests(BaseTest, unittest.TestCase):
                          'cash',
                          datetime(2014,10,23))
 
-        entries = bbook.filter(vendor='Amazon')
+        entries = bbook.eq(vendor='Amazon')
         self.assertEquals(1, len(entries))
         self.check_entry(entries[0],
                          -50.00,
@@ -82,7 +82,7 @@ class BalanceBookTests(BaseTest, unittest.TestCase):
                          'mcredit',
                          datetime(2014,10,04))
 
-        entries = bbook.filter(method='debit')
+        entries = bbook.eq(method='debit')
         self.assertEquals(1, len(entries))
         self.check_entry(entries[0],
                          -3.25,
@@ -92,7 +92,7 @@ class BalanceBookTests(BaseTest, unittest.TestCase):
                          'debit',
                          datetime(2014,10,23))
 
-        entries = bbook.filter(date=datetime(2014,10,04))
+        entries = bbook.eq(date=datetime(2014,10,04))
         self.assertEquals(1, len(entries))
         self.check_entry(entries[0],
                          -50.00,
@@ -102,7 +102,7 @@ class BalanceBookTests(BaseTest, unittest.TestCase):
                          'mcredit',
                          datetime(2014,10,04))
 
-        entries = bbook.filter(amount=-11.00,
+        entries = bbook.eq(amount=-11.00,
                                category='food',
                                description='burrito for lunch',
                                vendor='Chipotle',
@@ -117,16 +117,16 @@ class BalanceBookTests(BaseTest, unittest.TestCase):
                          'cash',
                          datetime(2014,10,01))
 
-        entries = bbook.filter(amount=-42.00)
+        entries = bbook.eq(amount=-42.00)
         self.assertEquals(0, len(entries))
 
-        entries = bbook.filter(amount=-42.00, method='cash')
+        entries = bbook.eq(amount=-42.00, method='cash')
         self.assertEquals(0, len(entries))
 
-        entries = bbook.filter(bad=True)
+        entries = bbook.eq(bad=True)
         self.assertEquals(0, len(entries))
 
-        entries = bbook.filter(bad=True, date=datetime(2014,10,04))
+        entries = bbook.eq(bad=True, date=datetime(2014,10,04))
         self.assertEquals(0, len(entries))
 
     def test_remove(self):
@@ -134,7 +134,7 @@ class BalanceBookTests(BaseTest, unittest.TestCase):
         bbook = BalanceBook(loader.load())
         bbook.remove(amount=-11.00)
         self.assertEquals(4, len(bbook.entries))
-        self.assertEquals(0, len(bbook.filter(amount=-11.00)))
+        self.assertEquals(0, len(bbook.eq(amount=-11.00)))
 
 if __name__ == '__main__':
     unittest.main()

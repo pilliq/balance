@@ -1,6 +1,7 @@
 # AMDG
 
 import logging
+import operator
 
 class BalanceBook(object):
     def __init__(self, entries):
@@ -35,17 +36,24 @@ class BalanceBook(object):
             print(e)
 
     def remove(self, **kwargs):
-        entries = self.filter(**kwargs)
+        entries = self.eq(**kwargs)
         for e in entries:
             self._remove(e.eid)
 
-    def filter(self, **kwargs):
+    def eq(self, **kwargs):
+        return self._filter(operator.eq, **kwargs)
+
+    def ne(self, **kwargs):
+        return self._filter(operator.ne, **kwargs)
+
+    def _filter(self, op, **kwargs):
         result = []
         for e in self.entries:
             passes = True
             for key, value in kwargs.iteritems():
+                print(key, value)
                 if e.has_field(key):
-                    if not getattr(e, key) == value:
+                    if not op(getattr(e, key), value):
                         passes = False
                 else:
                     passes = False
